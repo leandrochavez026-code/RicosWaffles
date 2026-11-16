@@ -9,7 +9,7 @@ const productos = [
         nombre: "Waffle sencillo",
         descripcion: "Waffle con fruta y miel.",
         precio: 15,
-        imagen: "imagenes/waffle-sencillo.jpg",
+        imagen: "waffle-sencillo.jpg",
         agotado: false,
 
         categorias: {
@@ -23,7 +23,7 @@ const productos = [
         nombre: "Waffle completo",
         descripcion: "Waffle con frutas y complementos.",
         precio: 25,
-        imagen: "imagenes/waffle-completo.jpg",
+        imagen: "waffle-completo.jpg",
         agotado: false,
 
         categorias: {

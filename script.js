@@ -1,4 +1,3 @@
-
 /* ==================================
    1. CONFIGURACIÓN DEL MENÚ
 ================================== */
@@ -250,6 +249,55 @@ estilosVentana.textContent = `
         cursor: pointer;
     }
 
+    .control-fruta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 9px;
+        background: #f5f5f5;
+    }
+
+    .cantidad-fruta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .cantidad-fruta button {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 7px;
+        background: #d8eaff;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .cantidad-fruta button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .encabezado-item-carrito {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .encabezado-item-carrito button {
+        padding: 7px 10px;
+        border: none;
+        border-radius: 7px;
+        background: #d8eaff;
+        cursor: pointer;
+    }
+
     @media (max-width: 480px) {
         .personalizador {
             padding: 17px;
@@ -381,8 +429,7 @@ function mostrarOpciones() {
             const opciones = document.createElement("div");
             opciones.className = "opciones-ingredientes";
 
-            // Botón para elegir que no se desea
-            // ningún ingrediente de esta categoría.
+            // Opción para no elegir ingredientes.
 
             const botonSin = document.createElement("button");
             botonSin.type = "button";
@@ -401,58 +448,132 @@ function mostrarOpciones() {
 
             opciones.appendChild(botonSin);
 
-            // Mostrar cada ingrediente disponible.
+            // FRUTAS: permiten repetir una misma opción.
 
-            ingredientes[categoria].forEach(ingrediente => {
-                const boton = document.createElement("button");
-                boton.type = "button";
-                boton.className = "opcion-ingrediente";
+            if (categoria === "frutas") {
 
-                const seleccionado =
-                    selecciones[categoria].includes(ingrediente.nombre);
+                ingredientes.frutas.forEach(ingrediente => {
 
-                boton.textContent = ingrediente.agotado
-                    ? `${ingrediente.nombre} (Agotado)`
-                    : ingrediente.nombre;
+                    const cantidad = selecciones.frutas.filter(
+                        nombre => nombre === ingrediente.nombre
+                    ).length;
 
-                if (seleccionado) {
-                    boton.classList.add("seleccionado");
-                }
+                    const fila = document.createElement("div");
+                    fila.className = "control-fruta";
 
-                if (ingrediente.agotado) {
-                    boton.disabled = true;
-                    boton.classList.add("ingrediente-agotado");
-                }
+                    const nombre = document.createElement("span");
+                    nombre.textContent = ingrediente.agotado
+                        ? `${ingrediente.nombre} (Agotado)`
+                        : ingrediente.nombre;
 
-                // Si ya se alcanzó el límite,
-                // deshabilitar las opciones no seleccionadas.
-
-                if (
-                    selecciones[categoria].length >= limite &&
-                    !seleccionado
-                ) {
-                    boton.disabled = true;
-                }
-
-                boton.addEventListener("click", () => {
-                    if (ingrediente.agotado) return;
-
-                    const seleccionados = selecciones[categoria];
-
-                    if (seleccionados.includes(ingrediente.nombre)) {
-                        selecciones[categoria] =
-                            seleccionados.filter(
-                                nombre => nombre !== ingrediente.nombre
-                            );
-                    } else if (seleccionados.length < limite) {
-                        seleccionados.push(ingrediente.nombre);
+                    if (ingrediente.agotado) {
+                        nombre.className = "ingrediente-agotado";
                     }
 
-                    mostrarOpciones();
+                    const controles = document.createElement("div");
+                    controles.className = "cantidad-fruta";
+
+                    const menos = document.createElement("button");
+                    menos.type = "button";
+                    menos.textContent = "−";
+                    menos.disabled = cantidad === 0;
+
+                    menos.addEventListener("click", () => {
+                        const posicion =
+                            selecciones.frutas.indexOf(ingrediente.nombre);
+
+                        if (posicion !== -1) {
+                            selecciones.frutas.splice(posicion, 1);
+                            mostrarOpciones();
+                        }
+                    });
+
+                    const numero = document.createElement("span");
+                    numero.textContent = cantidad;
+
+                    const mas = document.createElement("button");
+                    mas.type = "button";
+                    mas.textContent = "+";
+
+                    mas.disabled =
+                        ingrediente.agotado ||
+                        selecciones.frutas.length >= limite;
+
+                    mas.addEventListener("click", () => {
+                        if (
+                            !ingrediente.agotado &&
+                            selecciones.frutas.length < limite
+                        ) {
+                            selecciones.frutas.push(ingrediente.nombre);
+                            mostrarOpciones();
+                        }
+                    });
+
+                    controles.appendChild(menos);
+                    controles.appendChild(numero);
+                    controles.appendChild(mas);
+
+                    fila.appendChild(nombre);
+                    fila.appendChild(controles);
+
+                    opciones.appendChild(fila);
                 });
 
-                opciones.appendChild(boton);
-            });
+            } else {
+
+                // LAS DEMÁS CATEGORÍAS:
+                // siguen funcionando como selecciones normales.
+
+                ingredientes[categoria].forEach(ingrediente => {
+
+                    const boton = document.createElement("button");
+                    boton.type = "button";
+                    boton.className = "opcion-ingrediente";
+
+                    const seleccionado =
+                        selecciones[categoria].includes(ingrediente.nombre);
+
+                    boton.textContent = ingrediente.agotado
+                        ? `${ingrediente.nombre} (Agotado)`
+                        : ingrediente.nombre;
+
+                    if (seleccionado) {
+                        boton.classList.add("seleccionado");
+                    }
+
+                    if (ingrediente.agotado) {
+                        boton.disabled = true;
+                        boton.classList.add("ingrediente-agotado");
+                    }
+
+                    if (
+                        selecciones[categoria].length >= limite &&
+                        !seleccionado
+                    ) {
+                        boton.disabled = true;
+                    }
+
+                    boton.addEventListener("click", () => {
+
+                        if (ingrediente.agotado) return;
+
+                        const seleccionados = selecciones[categoria];
+
+                        if (seleccionados.includes(ingrediente.nombre)) {
+                            selecciones[categoria] =
+                                seleccionados.filter(
+                                    nombre => nombre !== ingrediente.nombre
+                                );
+                        } else if (seleccionados.length < limite) {
+                            seleccionados.push(ingrediente.nombre);
+                        }
+
+                        mostrarOpciones();
+                    });
+
+                    opciones.appendChild(boton);
+                });
+            }
 
             grupo.appendChild(opciones);
             contenedorOpciones.appendChild(grupo);
@@ -555,11 +676,32 @@ function actualizarResumen() {
         const elemento = document.createElement("div");
         elemento.className = "item-carrito";
 
+        const encabezado = document.createElement("div");
+        encabezado.className = "encabezado-item-carrito";
+
         const titulo = document.createElement("strong");
+
         titulo.textContent =
             `${producto.nombre} - Q${producto.precio.toFixed(2)}`;
 
-        elemento.appendChild(titulo);
+        const repetir = document.createElement("button");
+
+        repetir.type = "button";
+        repetir.textContent = "Pedir lo mismo";
+
+        repetir.addEventListener("click", () => {
+
+            const copia = JSON.parse(JSON.stringify(producto));
+
+            carrito.push(copia);
+
+            actualizarResumen();
+        });
+
+        encabezado.appendChild(titulo);
+        encabezado.appendChild(repetir);
+
+        elemento.appendChild(encabezado);
 
         // Mostrar ingredientes seleccionados.
 

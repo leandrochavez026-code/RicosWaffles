@@ -1,5 +1,5 @@
 /* ==================================
-   1. CONFIGURACIÓN DEL MENÚ
+1. CONFIGURACIÓN DEL MENÚ
 ================================== */
 
 const productos = [
@@ -8,8 +8,9 @@ const productos = [
         nombre: "Waffle sencillo",
         descripcion: "Waffle con fruta y miel.",
         precio: 20,
-        imagen: "waffle-sencillo.jpeg.jpeg",
+        imagen: "waffle-sencillo.jpeg",
         agotado: false,
+        permiteMasSabor: true,
 
         categorias: {
             frutas: 1,
@@ -22,8 +23,9 @@ const productos = [
         nombre: "Waffle completo",
         descripcion: "Waffle con frutas y complementos.",
         precio: 30,
-        imagen: "waffle-completo.jpeg.jpeg",
+        imagen: "waffle-completo.jpeg",
         agotado: false,
+        permiteMasSabor: true,
 
         categorias: {
             frutas: 2,
@@ -31,12 +33,24 @@ const productos = [
             esencias: 1,
             mieles: 1
         }
+    },
+
+    {
+        id: 3,
+        nombre: "Oblea",
+        descripcion: "Oblea con dulce de leche",
+        precio: 10,
+        imagen: "oblea.jpeg",
+        agotado: false,
+        sinPersonalizacion: true,
+        permiteMasSabor: false,
+        categorias: {}
     }
 ];
 
 
 /* ==================================
-   2. CONFIGURACIÓN DE INGREDIENTES
+2. CONFIGURACIÓN DE INGREDIENTES
 ================================== */
 
 // Para marcar un ingrediente como agotado,
@@ -76,7 +90,7 @@ const nombresCategorias = {
 
 
 /* ==================================
-   3. CONFIGURACIÓN GENERAL
+3. CONFIGURACIÓN GENERAL
 ================================== */
 
 const telefono = "50241314186";
@@ -91,7 +105,7 @@ const totalElemento = document.getElementById("total");
 
 
 /* ==================================
-   4. CREAR VENTANA DE PERSONALIZACIÓN
+4. CREAR VENTANA DE PERSONALIZACIÓN
 ================================== */
 
 const ventana = document.createElement("dialog");
@@ -124,11 +138,8 @@ document.body.appendChild(ventana);
 
 
 /* ==================================
-   5. ESTILOS DE LA VENTANA
+5. ESTILOS DE LA VENTANA
 ================================== */
-
-// Estos estilos pertenecen únicamente
-// a la ventana de personalización.
 
 const estilosVentana = document.createElement("style");
 
@@ -315,7 +326,7 @@ document.head.appendChild(estilosVentana);
 
 
 /* ==================================
-   6. ESTADO DEL PERSONALIZADOR
+6. ESTADO DEL PERSONALIZADOR
 ================================== */
 
 let productoActual = null;
@@ -324,7 +335,7 @@ let selecciones = {};
 
 
 /* ==================================
-   7. MOSTRAR PRODUCTOS
+7. MOSTRAR PRODUCTOS
 ================================== */
 
 function mostrarProductos() {
@@ -333,6 +344,8 @@ function mostrarProductos() {
     productos.forEach(producto => {
         const tarjeta = document.createElement("article");
         tarjeta.className = "tarjeta";
+
+        const textoBoton = producto.sinPersonalizacion ? "Agregar al pedido" : "Personalizar y agregar";
 
         tarjeta.innerHTML = `
             <img src="${producto.imagen}" alt="${producto.nombre}">
@@ -349,7 +362,7 @@ function mostrarProductos() {
                 producto.agotado
                 ? `<span class="agotado">¡Agotado!</span>`
                 : `<button class="boton-agregar" data-id="${producto.id}">
-                    Personalizar y agregar
+                    ${textoBoton}
                    </button>`
             }
         `;
@@ -360,7 +373,7 @@ function mostrarProductos() {
 
 
 /* ==================================
-   8. ABRIR PERSONALIZADOR
+8. ABRIR PERSONALIZADOR
 ================================== */
 
 function abrirPersonalizador(producto, indice = null) {
@@ -369,26 +382,30 @@ function abrirPersonalizador(producto, indice = null) {
     productoActual = producto;
     indiceEdicion = indice;
 
-    // Si estamos editando, recuperamos las selecciones.
-    // Si es un producto nuevo, comenzamos desde cero.
-
     if (indice !== null) {
         const anterior = carrito[indice];
 
         selecciones = JSON.parse(
-            JSON.stringify(anterior.selecciones)
+            JSON.stringify(anterior.selecciones || {})
         );
 
-        document.getElementById("mas-sabor").checked =
-            anterior.masSabor;
+        const inputMasSabor = document.getElementById("mas-sabor");
+        if (inputMasSabor) {
+            inputMasSabor.checked = !!anterior.masSabor;
+        }
     } else {
         selecciones = {};
 
-        Object.keys(producto.categorias).forEach(categoria => {
-            selecciones[categoria] = [];
-        });
+        if (producto.categorias) {
+            Object.keys(producto.categorias).forEach(categoria => {
+                selecciones[categoria] = [];
+            });
+        }
 
-        document.getElementById("mas-sabor").checked = false;
+        const inputMasSabor = document.getElementById("mas-sabor");
+        if (inputMasSabor) {
+            inputMasSabor.checked = false;
+        }
     }
 
     document.getElementById("titulo-personalizador").textContent =
@@ -407,7 +424,7 @@ function abrirPersonalizador(producto, indice = null) {
 
 
 /* ==================================
-   9. MOSTRAR OPCIONES DE INGREDIENTES
+9. MOSTRAR OPCIONES DE INGREDIENTES
 ================================== */
 
 function mostrarOpciones() {
@@ -415,6 +432,8 @@ function mostrarOpciones() {
         document.getElementById("opciones-personalizador");
 
     contenedorOpciones.innerHTML = "";
+
+    if (!productoActual.categorias) return;
 
     Object.entries(productoActual.categorias).forEach(
         ([categoria, limite]) => {
@@ -431,15 +450,13 @@ function mostrarOpciones() {
             const opciones = document.createElement("div");
             opciones.className = "opciones-ingredientes";
 
-            // Opción para no elegir ingredientes.
-
             const botonSin = document.createElement("button");
             botonSin.type = "button";
             botonSin.className = "opcion-ingrediente opcion-sin";
             botonSin.textContent =
                 `Sin ${nombresCategorias[categoria].toLowerCase()}`;
 
-            if (selecciones[categoria].length === 0) {
+            if (selecciones[categoria] && selecciones[categoria].length === 0) {
                 botonSin.classList.add("seleccionado");
             }
 
@@ -450,13 +467,11 @@ function mostrarOpciones() {
 
             opciones.appendChild(botonSin);
 
-            // FRUTAS: permiten repetir una misma opción.
-
             if (categoria === "frutas") {
 
                 ingredientes.frutas.forEach(ingrediente => {
 
-                    const cantidad = selecciones.frutas.filter(
+                    const cantidad = (selecciones.frutas || []).filter(
                         nombre => nombre === ingrediente.nombre
                     ).length;
 
@@ -482,7 +497,7 @@ function mostrarOpciones() {
 
                     menos.addEventListener("click", () => {
                         const posicion =
-                            selecciones.frutas.indexOf(ingrediente.nombre);
+                            (selecciones.frutas || []).indexOf(ingrediente.nombre);
 
                         if (posicion !== -1) {
                             selecciones.frutas.splice(posicion, 1);
@@ -499,13 +514,14 @@ function mostrarOpciones() {
 
                     mas.disabled =
                         ingrediente.agotado ||
-                        selecciones.frutas.length >= limite;
+                        (selecciones.frutas || []).length >= limite;
 
                     mas.addEventListener("click", () => {
                         if (
                             !ingrediente.agotado &&
-                            selecciones.frutas.length < limite
+                            (selecciones.frutas || []).length < limite
                         ) {
+                            if (!selecciones.frutas) selecciones.frutas = [];
                             selecciones.frutas.push(ingrediente.nombre);
                             mostrarOpciones();
                         }
@@ -523,9 +539,6 @@ function mostrarOpciones() {
 
             } else {
 
-                // LAS DEMÁS CATEGORÍAS:
-                // siguen funcionando como selecciones normales.
-
                 ingredientes[categoria].forEach(ingrediente => {
 
                     const boton = document.createElement("button");
@@ -533,7 +546,7 @@ function mostrarOpciones() {
                     boton.className = "opcion-ingrediente";
 
                     const seleccionado =
-                        selecciones[categoria].includes(ingrediente.nombre);
+                        (selecciones[categoria] || []).includes(ingrediente.nombre);
 
                     boton.textContent = ingrediente.agotado
                         ? `${ingrediente.nombre} (Agotado)`
@@ -549,7 +562,7 @@ function mostrarOpciones() {
                     }
 
                     if (
-                        selecciones[categoria].length >= limite &&
+                        (selecciones[categoria] || []).length >= limite &&
                         !seleccionado
                     ) {
                         boton.disabled = true;
@@ -559,6 +572,7 @@ function mostrarOpciones() {
 
                         if (ingrediente.agotado) return;
 
+                        if (!selecciones[categoria]) selecciones[categoria] = [];
                         const seleccionados = selecciones[categoria];
 
                         if (seleccionados.includes(ingrediente.nombre)) {
@@ -585,7 +599,7 @@ function mostrarOpciones() {
 
 
 /* ==================================
-   10. GUARDAR PRODUCTO EN EL CARRITO
+10. GUARDAR PRODUCTO EN EL CARRITO
 ================================== */
 
 document.getElementById("guardar-personalizacion")
@@ -593,8 +607,8 @@ document.getElementById("guardar-personalizacion")
 
         if (!productoActual) return;
 
-        const masSabor =
-            document.getElementById("mas-sabor").checked;
+        const inputMasSabor = document.getElementById("mas-sabor");
+        const masSabor = inputMasSabor ? inputMasSabor.checked : false;
 
         const precioFinal =
             productoActual.precio +
@@ -606,6 +620,7 @@ document.getElementById("guardar-personalizacion")
             precioBase: productoActual.precio,
             precio: precioFinal,
             masSabor: masSabor,
+            permiteMasSabor: productoActual.permiteMasSabor,
 
             selecciones: JSON.parse(
                 JSON.stringify(selecciones)
@@ -624,7 +639,7 @@ document.getElementById("guardar-personalizacion")
 
 
 /* ==================================
-   11. CANCELAR PERSONALIZACIÓN
+11. CANCELAR PERSONALIZACIÓN
 ================================== */
 
 document.getElementById("cancelar-personalizacion")
@@ -634,7 +649,7 @@ document.getElementById("cancelar-personalizacion")
 
 
 /* ==================================
-   12. ABRIR PERSONALIZADOR DESDE EL MENÚ
+12. ABRIR PERSONALIZADOR DESDE EL MENÚ
 ================================== */
 
 contenedor.addEventListener("click", event => {
@@ -643,15 +658,32 @@ contenedor.addEventListener("click", event => {
     if (!boton) return;
 
     const id = Number(boton.dataset.id);
-
     const producto = productos.find(p => p.id === id);
 
-    abrirPersonalizador(producto);
+    if (!producto || producto.agotado) return;
+
+    if (producto.sinPersonalizacion) {
+        // Agregar directamente al carrito sin abrir modal
+        const nuevoProducto = {
+            id: producto.id,
+            nombre: producto.nombre,
+            precioBase: producto.precio,
+            precio: producto.precio,
+            masSabor: false,
+            permiteMasSabor: false,
+            selecciones: {}
+        };
+
+        carrito.push(nuevoProducto);
+        actualizarResumen();
+    } else {
+        abrirPersonalizador(producto);
+    }
 });
 
 
 /* ==================================
-   13. CALCULAR TOTAL DEL CARRITO
+13. CALCULAR TOTAL DEL CARRITO
 ================================== */
 
 function calcularTotal() {
@@ -663,7 +695,7 @@ function calcularTotal() {
 
 
 /* ==================================
-   14. MOSTRAR RESUMEN DEL PEDIDO
+14. MOSTRAR RESUMEN DEL PEDIDO
 ================================== */
 
 function actualizarResumen() {
@@ -692,11 +724,8 @@ function actualizarResumen() {
         repetir.textContent = "Pedir lo mismo";
 
         repetir.addEventListener("click", () => {
-
             const copia = JSON.parse(JSON.stringify(producto));
-
             carrito.push(copia);
-
             actualizarResumen();
         });
 
@@ -705,49 +734,56 @@ function actualizarResumen() {
 
         elemento.appendChild(encabezado);
 
-        // Mostrar ingredientes seleccionados.
+        // Mostrar ingredientes seleccionados (si los tiene).
+        if (producto.selecciones && Object.keys(producto.selecciones).length > 0) {
+            Object.entries(producto.selecciones).forEach(
+                ([categoria, seleccionados]) => {
 
-        Object.entries(producto.selecciones).forEach(
-            ([categoria, seleccionados]) => {
+                    const detalle = document.createElement("p");
 
-                const detalle = document.createElement("p");
+                    detalle.textContent =
+                        `${nombresCategorias[categoria]}: ` +
+                        (
+                            seleccionados.length > 0
+                            ? seleccionados.join(", ")
+                            : "Ninguno"
+                        );
 
-                detalle.textContent =
-                    `${nombresCategorias[categoria]}: ` +
-                    (
-                        seleccionados.length > 0
-                        ? seleccionados.join(", ")
-                        : "Ninguno"
-                    );
+                    elemento.appendChild(detalle);
+                }
+            );
+        }
 
-                elemento.appendChild(detalle);
-            }
-        );
+        // Mostrar opción ¡Más Sabor! solo si el producto lo permite
+        if (producto.permiteMasSabor !== false) {
+            const sabor = document.createElement("p");
 
-        const sabor = document.createElement("p");
+            sabor.textContent = producto.masSabor
+                ? "¡Más Sabor!: Chispas de chocolate (+Q5)"
+                : "¡Más Sabor!: No";
 
-        sabor.textContent = producto.masSabor
-            ? "¡Más Sabor!: Chispas de chocolate (+Q5)"
-            : "¡Más Sabor!: No";
-
-        elemento.appendChild(sabor);
+            elemento.appendChild(sabor);
+        }
 
         // Botones de edición y eliminación.
-
         const acciones = document.createElement("div");
         acciones.className = "acciones-carrito";
 
-        const editar = document.createElement("button");
-        editar.type = "button";
-        editar.textContent = "Editar";
+        // Solo mostrar editar si el producto permite personalización
+        if (producto.permiteMasSabor !== false) {
+            const editar = document.createElement("button");
+            editar.type = "button";
+            editar.textContent = "Editar";
 
-        editar.addEventListener("click", () => {
-            const original = productos.find(
-                p => p.id === producto.id
-            );
+            editar.addEventListener("click", () => {
+                const original = productos.find(
+                    p => p.id === producto.id
+                );
 
-            abrirPersonalizador(original, indice);
-        });
+                abrirPersonalizador(original, indice);
+            });
+            acciones.appendChild(editar);
+        }
 
         const eliminar = document.createElement("button");
         eliminar.type = "button";
@@ -758,7 +794,6 @@ function actualizarResumen() {
             actualizarResumen();
         });
 
-        acciones.appendChild(editar);
         acciones.appendChild(eliminar);
 
         elemento.appendChild(acciones);
@@ -771,7 +806,7 @@ function actualizarResumen() {
 
 
 /* ==================================
-   15. ENVIAR PEDIDO POR WHATSAPP
+15. ENVIAR PEDIDO POR WHATSAPP
 ================================== */
 
 document.getElementById("enviar-pedido")
@@ -808,23 +843,27 @@ document.getElementById("enviar-pedido")
             mensaje +=
                 `Precio base: Q${producto.precioBase.toFixed(2)}\n`;
 
-            Object.entries(producto.selecciones).forEach(
-                ([categoria, seleccionados]) => {
+            if (producto.selecciones && Object.keys(producto.selecciones).length > 0) {
+                Object.entries(producto.selecciones).forEach(
+                    ([categoria, seleccionados]) => {
 
-                    mensaje +=
-                        `${nombresCategorias[categoria]}: ` +
-                        (
-                            seleccionados.length > 0
-                            ? seleccionados.join(", ")
-                            : "Ninguno"
-                        ) +
-                        "\n";
-                }
-            );
+                        mensaje +=
+                            `${nombresCategorias[categoria]}: ` +
+                            (
+                                seleccionados.length > 0
+                                ? seleccionados.join(", ")
+                                : "Ninguno"
+                            ) +
+                            "\n";
+                    }
+                );
+            }
 
-            mensaje += producto.masSabor
-                ? "¡Más Sabor!: Chispas de chocolate (+Q5)\n"
-                : "¡Más Sabor!: No\n";
+            if (producto.permiteMasSabor !== false) {
+                mensaje += producto.masSabor
+                    ? "¡Más Sabor!: Chispas de chocolate (+Q5)\n"
+                    : "¡Más Sabor!: No\n";
+            }
 
             mensaje +=
                 `Subtotal: Q${producto.precio.toFixed(2)}\n\n`;
@@ -845,7 +884,7 @@ document.getElementById("enviar-pedido")
 
 
 /* ==================================
-   16. INICIAR PÁGINA
+16. INICIAR PÁGINA
 ================================== */
 
 mostrarProductos();

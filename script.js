@@ -8,7 +8,7 @@ const productos = [
         nombre: "Waffle sencillo",
         descripcion: "Waffle con fruta y miel.",
         precio: 20,
-        imagen: "waffle-sencillo.jpg",
+        imagen: "waffle-sencillo.jpeg",
         agotado: false,
 
         categorias: {
@@ -22,7 +22,7 @@ const productos = [
         nombre: "Waffle completo",
         descripcion: "Waffle con frutas y complementos.",
         precio: 30,
-        imagen: "waffle-completo.jpg",
+        imagen: "waffle-completo.jpeg",
         agotado: false,
 
         categorias: {
@@ -31,16 +31,6 @@ const productos = [
             esencias: 1,
             mieles: 1
         }
-    },
-
-   {
-        id: 3,
-        nombre: "Obleas Dulces",
-        descripcion: "Obleas con dulce de leche.",
-        precio: 10,
-        imagen: "Oblea.jpg",
-        agotado: false,
-
     }
 ];
 

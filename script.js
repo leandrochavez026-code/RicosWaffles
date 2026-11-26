@@ -60,7 +60,7 @@ const productos = [
         nombre: "Coca-Cola Zero 250 ml",
         descripcion: "Todo el sabor, sin azúcar.",
         precio: 5,
-        imagen: "coca-cola-zero-300ml.jpeg",
+        imagen: "coca-cola-zero-300ml.png",
         agotado: false,
         sinPersonalizacion: true,
         permiteMasSabor: false,

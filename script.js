@@ -46,7 +46,7 @@ const productos = [
     },
     {
         id: 4,
-        nombre: "Coca-Cola lata 12 oz",
+        nombre: "Coca-Cola lata 354 ml",
         descripcion: "Bebida refrescante para cualquier momento.",
         precio: 10,
         imagen: "coca-cola-lata.jpeg",
@@ -57,7 +57,7 @@ const productos = [
     },
     {
         id: 5,
-        nombre: "Coca-Cola Zero 300 ml",
+        nombre: "Coca-Cola Zero 250 ml",
         descripcion: "Todo el sabor, sin azúcar.",
         precio: 5,
         imagen: "coca-cola-zero-300ml.jpeg",

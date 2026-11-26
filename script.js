@@ -13,7 +13,8 @@ const productos = [
         permiteMasSabor: true,
         categorias: {
             frutas: 1,
-            mieles: 1
+            mieles: 1,
+            decoraciones: 1
         }
     },
     {
@@ -28,7 +29,8 @@ const productos = [
             frutas: 2,
             complementos: 1,
             esencias: 1,
-            mieles: 1
+            mieles: 1,
+            decoraciones: 2
         }
     },
     {
@@ -71,33 +73,56 @@ const productos = [
         precio: 20,
         imagen: "batido.jpeg",
         agotado: false,
-        sinPersonalizacion: true,
+        sinPersonalizacion: false,
         permiteMasSabor: false,
-        categorias: {}
+        categorias: {
+            saboresBatido: 1,
+            basesBatido: 1,
+            complementosBatido: 1,
+            decoracionesBatido: 2
+        }
     },
     {
         id: 7,
         nombre: "¡EXCLUSIVO! Waffle sencillo + Batido",
-        descripcion: "Disfruta tu waffle sencillo y un batido por precio especial. Batido a Q15 en combo.",
+        descripcion: "Disfruta tu waffle sencillo y un batido por precio especial.",
         precio: 35,
         imagen: "combo-sencillo-batido.jpeg",
         agotado: false,
-        sinPersonalizacion: true,
+        sinPersonalizacion: false,
         permiteMasSabor: false,
         etiqueta: "¡EXCLUSIVO!",
-        categorias: {}
+        categorias: {
+            frutas: 1,
+            mieles: 1,
+            decoraciones: 1,
+            saboresBatido: 1,
+            basesBatido: 1,
+            complementosBatido: 1,
+            decoracionesBatido: 2
+        }
     },
     {
         id: 8,
         nombre: "¡EXCLUSIVO! Waffle completo + Batido",
-        descripcion: "Waffle completo acompañado de un batido por precio especial. Batido a Q15 en combo.",
+        descripcion: "Waffle completo acompañado de un batido por precio especial.",
         precio: 45,
         imagen: "combo-completo-batido.jpeg",
         agotado: false,
-        sinPersonalizacion: true,
+        sinPersonalizacion: false,
         permiteMasSabor: false,
         etiqueta: "¡EXCLUSIVO!",
-        categorias: {}
+        categorias: {
+            frutas: 2,
+            complementos: 1,
+            esencias: 1,
+            mieles: 1,
+            decoraciones: 2,
+            saboresBatido: 1,
+            basesBatido: 1,
+            complementosBatido: 1,
+            decoracionesBatido: 2
+        }
     }
 ];
 
@@ -128,6 +153,29 @@ const ingredientes = {
     mieles: [
         { nombre: "Miel de abeja", agotado: false },
         { nombre: "Miel de maple", agotado: false }
+    ],
+
+    decoraciones: [
+        { nombre: "Palillos dulces", agotado: false }
+    ],
+
+    saboresBatido: [
+        { nombre: "Batido de banano", agotado: false },
+        { nombre: "Batido de fresa", agotado: false }
+    ],
+
+    basesBatido: [
+        { nombre: "Agua", agotado: false },
+        { nombre: "Leche", agotado: false }
+    ],
+
+    complementosBatido: [
+        { nombre: "Crema batida", agotado: false }
+    ],
+
+    decoracionesBatido: [
+        { nombre: "Coco rayado", agotado: false },
+        { nombre: "Palillos dulces", agotado: false }
     ]
 };
 
@@ -135,7 +183,12 @@ const nombresCategorias = {
     frutas: "Frutas",
     complementos: "Complementos",
     esencias: "Esencias",
-    mieles: "Mieles"
+    mieles: "Mieles",
+    decoraciones: "Decoraciones",
+    saboresBatido: "Sabor del batido",
+    basesBatido: "Base del batido",
+    complementosBatido: "Complementos del batido",
+    decoracionesBatido: "Decoraciones del batido"
 };
 
 
@@ -486,6 +539,14 @@ function abrirPersonalizador(producto, indice = null) {
     document.getElementById("guardar-personalizacion").textContent =
         indice === null ? "Agregar al pedido" : "Guardar cambios";
 
+    // Ocultar ¡Más Sabor! en productos que no lo permiten.
+    const opcionMasSabor = document.querySelector(".opcion-mas-sabor");
+
+    if (opcionMasSabor) {
+        opcionMasSabor.style.display =
+            producto.permiteMasSabor !== false ? "block" : "none";
+    }
+
     mostrarOpciones();
 
     ventana.showModal();
@@ -522,7 +583,6 @@ function mostrarOpciones() {
             const botonSin = document.createElement("button");
             botonSin.type = "button";
             botonSin.className = "opcion-ingrediente opcion-sin";
-
             botonSin.textContent =
                 `Sin ${nombresCategorias[categoria].toLowerCase()}`;
 
@@ -540,6 +600,7 @@ function mostrarOpciones() {
 
             opciones.appendChild(botonSin);
 
+            // Selector de frutas con cantidades.
             if (categoria === "frutas") {
 
                 ingredientes.frutas.forEach(ingrediente => {
@@ -618,6 +679,7 @@ function mostrarOpciones() {
 
             } else {
 
+                // Selectores normales para el resto de categorías.
                 ingredientes[categoria].forEach(ingrediente => {
 
                     const boton = document.createElement("button");

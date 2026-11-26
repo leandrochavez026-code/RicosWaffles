@@ -1,4 +1,3 @@
-
 /* ==================================
 1. CONFIGURACIÓN DEL MENÚ
 ================================== */
@@ -79,6 +78,7 @@ const productos = [
         categorias: {
             saboresBatido: 1,
             basesBatido: 1,
+            esenciasBatido: 1,
             complementosBatido: 1,
             decoracionesBatido: 2
         }
@@ -99,6 +99,7 @@ const productos = [
             decoraciones: 1,
             saboresBatido: 1,
             basesBatido: 1,
+            esenciasBatido: 1,
             complementosBatido: 1,
             decoracionesBatido: 2
         }
@@ -121,12 +122,12 @@ const productos = [
             decoraciones: 1,
             saboresBatido: 1,
             basesBatido: 1,
+            esenciasBatido: 1,
             complementosBatido: 1,
             decoracionesBatido: 2
         }
     }
 ];
-
 
 /* ==================================
 2. CONFIGURACIÓN DE INGREDIENTES
@@ -141,7 +142,7 @@ const ingredientes = {
 
     complementos: [
         { nombre: "Crema batida", agotado: false },
-        { nombre: "Crema de avellanas", agotado: false }
+        { nombre: "Nutella", agotado: false }
     ],
 
     esencias: [
@@ -170,6 +171,12 @@ const ingredientes = {
         { nombre: "Leche", agotado: false }
     ],
 
+    esenciasBatido: [
+        { nombre: "Chocolate", agotado: false },
+        { nombre: "Esencia de Fresa", agotado: false },
+        { nombre: "Dulce de Leche", agotado: false }
+    ],
+
     complementosBatido: [
         { nombre: "Crema batida", agotado: false }
     ],
@@ -188,11 +195,10 @@ const nombresCategorias = {
     decoraciones: "Decoraciones",
     saboresBatido: "Sabor del batido",
     basesBatido: "Base del batido",
+    esenciasBatido: "Esencias del batido",
     complementosBatido: "Complementos del batido",
     decoracionesBatido: "Decoraciones del batido"
 };
-
-
 /* ==================================
 3. CONFIGURACIÓN GENERAL
 ================================== */
@@ -877,7 +883,6 @@ function mostrarOpciones() {
     }
 }
 
-
 /* ==================================
 10. GUARDAR PRODUCTO EN EL CARRITO
 ================================== */
@@ -886,6 +891,26 @@ document.getElementById("guardar-personalizacion")
     .addEventListener("click", () => {
 
         if (!productoActual) return;
+
+        // Comprobar que el batido tenga una base líquida.
+        if (
+            productoActual.categorias?.basesBatido &&
+            (!selecciones.basesBatido ||
+             selecciones.basesBatido.length === 0)
+        ) {
+            alert("¡Tu batido necesita una base! Elige Agua o Leche.");
+
+            // Si es un combo, abrir automáticamente la pestaña del batido.
+            if (
+                productoActual.id === 7 ||
+                productoActual.id === 8
+            ) {
+                pestanaComboActiva = "batido";
+                mostrarOpciones();
+            }
+
+            return;
+        }
 
         const inputMasSabor = document.getElementById("mas-sabor");
 
@@ -919,8 +944,6 @@ document.getElementById("guardar-personalizacion")
         ventana.close();
         actualizarResumen();
     });
-
-
 /* ==================================
 11. CANCELAR PERSONALIZACIÓN
 ================================== */

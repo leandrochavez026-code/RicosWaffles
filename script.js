@@ -1,3 +1,4 @@
+
 /* ==================================
 1. CONFIGURACIÓN DEL MENÚ
 ================================== */
@@ -30,7 +31,7 @@ const productos = [
             complementos: 1,
             esencias: 1,
             mieles: 1,
-            decoraciones: 2
+            decoraciones: 1
         }
     },
     {
@@ -117,7 +118,7 @@ const productos = [
             complementos: 1,
             esencias: 1,
             mieles: 1,
-            decoraciones: 2,
+            decoraciones: 1,
             saboresBatido: 1,
             basesBatido: 1,
             complementosBatido: 1,
@@ -424,6 +425,54 @@ estilosVentana.textContent = `
         cursor: pointer;
     }
 
+    /* Pestañas de personalización para los combos */
+
+    .pestanas-combo {
+        display: flex;
+        gap: 10px;
+        margin: 18px 0;
+    }
+
+    .pestana-combo {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background: #eeeeee;
+        color: #333;
+        font-weight: bold;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .pestana-combo.activa {
+        background: #b3e5fc;
+        color: #075985;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+
+    .seccion-combo {
+        padding: 8px 0;
+    }
+
+    .titulo-seccion-combo {
+        margin: 15px 0;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 20px;
+        text-align: center;
+    }
+
+    .titulo-waffle {
+        background: #e8f5ff;
+        color: #0277bd;
+    }
+
+    .titulo-batido {
+        background: #fff0dc;
+        color: #a66000;
+    }
+
     @media (max-width: 480px) {
         .personalizador {
             padding: 17px;
@@ -445,6 +494,8 @@ document.head.appendChild(estilosVentana);
 let productoActual = null;
 let indiceEdicion = null;
 let selecciones = {};
+let pestanaComboActiva = "waffle";
+
 
 /* ==================================
 7. MOSTRAR PRODUCTOS
@@ -501,6 +552,11 @@ function abrirPersonalizador(producto, indice = null) {
 
     productoActual = producto;
     indiceEdicion = indice;
+
+    // Cada combo comienza siempre en la pestaña Waffle.
+    if (producto.id === 7 || producto.id === 8) {
+        pestanaComboActiva = "waffle";
+    }
 
     if (indice !== null) {
         const anterior = carrito[indice];
@@ -563,184 +619,262 @@ function mostrarOpciones() {
 
     contenedorOpciones.innerHTML = "";
 
-    if (!productoActual.categorias) return;
+    if (!productoActual || !productoActual.categorias) return;
 
-    Object.entries(productoActual.categorias).forEach(
-        ([categoria, limite]) => {
+    const esCombo = productoActual.id === 7 || productoActual.id === 8;
 
-            const grupo = document.createElement("section");
-            grupo.className = "grupo-ingredientes";
+    const categorias = Object.entries(productoActual.categorias);
 
-            const titulo = document.createElement("h3");
-            titulo.textContent =
-                `${nombresCategorias[categoria]} (máximo ${limite})`;
+    const categoriasWaffle = categorias.filter(
+        ([categoria]) => !categoria.endsWith("Batido")
+    );
 
-            grupo.appendChild(titulo);
+    const categoriasBatido = categorias.filter(
+        ([categoria]) => categoria.endsWith("Batido")
+    );
 
-            const opciones = document.createElement("div");
-            opciones.className = "opciones-ingredientes";
+    // Crear cada grupo de ingredientes.
+    function crearGrupo(categoria, limite, destino) {
+        const grupo = document.createElement("section");
+        grupo.className = "grupo-ingredientes";
 
-            const botonSin = document.createElement("button");
-            botonSin.type = "button";
-            botonSin.className = "opcion-ingrediente opcion-sin";
-            botonSin.textContent =
-                `Sin ${nombresCategorias[categoria].toLowerCase()}`;
+        const titulo = document.createElement("h3");
+        titulo.textContent =
+            `${nombresCategorias[categoria]} (máximo ${limite})`;
 
-            if (
-                selecciones[categoria] &&
-                selecciones[categoria].length === 0
-            ) {
-                botonSin.classList.add("seleccionado");
-            }
+        grupo.appendChild(titulo);
 
-            botonSin.addEventListener("click", () => {
-                selecciones[categoria] = [];
-                mostrarOpciones();
-            });
+        const opciones = document.createElement("div");
+        opciones.className = "opciones-ingredientes";
 
-            opciones.appendChild(botonSin);
+        // Botón para no seleccionar ingredientes.
+        const botonSin = document.createElement("button");
+        botonSin.type = "button";
+        botonSin.className = "opcion-ingrediente opcion-sin";
 
-            // Selector de frutas con cantidades.
-            if (categoria === "frutas") {
+        botonSin.textContent =
+            `Sin ${nombresCategorias[categoria].toLowerCase()}`;
 
-                ingredientes.frutas.forEach(ingrediente => {
+        if ((selecciones[categoria] || []).length === 0) {
+            botonSin.classList.add("seleccionado");
+        }
 
-                    const cantidad = (selecciones.frutas || []).filter(
-                        nombre => nombre === ingrediente.nombre
-                    ).length;
+        botonSin.addEventListener("click", () => {
+            selecciones[categoria] = [];
+            mostrarOpciones();
+        });
 
-                    const fila = document.createElement("div");
-                    fila.className = "control-fruta";
+        opciones.appendChild(botonSin);
 
-                    const nombre = document.createElement("span");
+        // Selector de frutas con cantidades.
+        if (categoria === "frutas") {
+            ingredientes.frutas.forEach(ingrediente => {
+                const cantidad = (selecciones.frutas || []).filter(
+                    nombre => nombre === ingrediente.nombre
+                ).length;
 
-                    nombre.textContent = ingrediente.agotado
-                        ? `${ingrediente.nombre} (Agotado)`
-                        : ingrediente.nombre;
+                const fila = document.createElement("div");
+                fila.className = "control-fruta";
 
-                    if (ingrediente.agotado) {
-                        nombre.className = "ingrediente-agotado";
-                    }
+                const nombre = document.createElement("span");
 
-                    const controles = document.createElement("div");
-                    controles.className = "cantidad-fruta";
+                nombre.textContent = ingrediente.agotado
+                    ? `${ingrediente.nombre} (Agotado)`
+                    : ingrediente.nombre;
 
-                    const menos = document.createElement("button");
-                    menos.type = "button";
-                    menos.textContent = "−";
-                    menos.disabled = cantidad === 0;
+                if (ingrediente.agotado) {
+                    nombre.className = "ingrediente-agotado";
+                }
 
-                    menos.addEventListener("click", () => {
-                        const posicion =
-                            (selecciones.frutas || []).indexOf(
-                                ingrediente.nombre
-                            );
+                const controles = document.createElement("div");
+                controles.className = "cantidad-fruta";
 
-                        if (posicion !== -1) {
-                            selecciones.frutas.splice(posicion, 1);
-                            mostrarOpciones();
-                        }
-                    });
+                const menos = document.createElement("button");
+                menos.type = "button";
+                menos.textContent = "−";
+                menos.disabled = cantidad === 0;
 
-                    const numero = document.createElement("span");
-                    numero.textContent = cantidad;
-
-                    const mas = document.createElement("button");
-                    mas.type = "button";
-                    mas.textContent = "+";
-
-                    mas.disabled =
-                        ingrediente.agotado ||
-                        (selecciones.frutas || []).length >= limite;
-
-                    mas.addEventListener("click", () => {
-                        if (
-                            !ingrediente.agotado &&
-                            (selecciones.frutas || []).length < limite
-                        ) {
-                            if (!selecciones.frutas) {
-                                selecciones.frutas = [];
-                            }
-
-                            selecciones.frutas.push(ingrediente.nombre);
-                            mostrarOpciones();
-                        }
-                    });
-
-                    controles.appendChild(menos);
-                    controles.appendChild(numero);
-                    controles.appendChild(mas);
-
-                    fila.appendChild(nombre);
-                    fila.appendChild(controles);
-
-                    opciones.appendChild(fila);
-                });
-
-            } else {
-
-                // Selectores normales para el resto de categorías.
-                ingredientes[categoria].forEach(ingrediente => {
-
-                    const boton = document.createElement("button");
-                    boton.type = "button";
-                    boton.className = "opcion-ingrediente";
-
-                    const seleccionado =
-                        (selecciones[categoria] || []).includes(
+                menos.addEventListener("click", () => {
+                    const posicion =
+                        (selecciones.frutas || []).indexOf(
                             ingrediente.nombre
                         );
 
-                    boton.textContent = ingrediente.agotado
-                        ? `${ingrediente.nombre} (Agotado)`
-                        : ingrediente.nombre;
-
-                    if (seleccionado) {
-                        boton.classList.add("seleccionado");
-                    }
-
-                    if (ingrediente.agotado) {
-                        boton.disabled = true;
-                        boton.classList.add("ingrediente-agotado");
-                    }
-
-                    if (
-                        (selecciones[categoria] || []).length >= limite &&
-                        !seleccionado
-                    ) {
-                        boton.disabled = true;
-                    }
-
-                    boton.addEventListener("click", () => {
-
-                        if (ingrediente.agotado) return;
-
-                        if (!selecciones[categoria]) {
-                            selecciones[categoria] = [];
-                        }
-
-                        const seleccionados = selecciones[categoria];
-
-                        if (seleccionados.includes(ingrediente.nombre)) {
-                            selecciones[categoria] =
-                                seleccionados.filter(
-                                    nombre => nombre !== ingrediente.nombre
-                                );
-                        } else if (seleccionados.length < limite) {
-                            seleccionados.push(ingrediente.nombre);
-                        }
-
+                    if (posicion !== -1) {
+                        selecciones.frutas.splice(posicion, 1);
                         mostrarOpciones();
-                    });
-
-                    opciones.appendChild(boton);
+                    }
                 });
-            }
 
-            grupo.appendChild(opciones);
-            contenedorOpciones.appendChild(grupo);
+                const numero = document.createElement("span");
+                numero.textContent = cantidad;
+
+                const mas = document.createElement("button");
+                mas.type = "button";
+                mas.textContent = "+";
+
+                mas.disabled =
+                    ingrediente.agotado ||
+                    (selecciones.frutas || []).length >= limite;
+
+                mas.addEventListener("click", () => {
+                    if (
+                        !ingrediente.agotado &&
+                        (selecciones.frutas || []).length < limite
+                    ) {
+                        if (!selecciones.frutas) {
+                            selecciones.frutas = [];
+                        }
+
+                        selecciones.frutas.push(ingrediente.nombre);
+                        mostrarOpciones();
+                    }
+                });
+
+                controles.appendChild(menos);
+                controles.appendChild(numero);
+                controles.appendChild(mas);
+
+                fila.appendChild(nombre);
+                fila.appendChild(controles);
+
+                opciones.appendChild(fila);
+            });
+
+        } else {
+            // Selectores normales para las demás categorías.
+            ingredientes[categoria].forEach(ingrediente => {
+                const boton = document.createElement("button");
+                boton.type = "button";
+                boton.className = "opcion-ingrediente";
+
+                const seleccionado =
+                    (selecciones[categoria] || []).includes(
+                        ingrediente.nombre
+                    );
+
+                boton.textContent = ingrediente.agotado
+                    ? `${ingrediente.nombre} (Agotado)`
+                    : ingrediente.nombre;
+
+                if (seleccionado) {
+                    boton.classList.add("seleccionado");
+                }
+
+                if (ingrediente.agotado) {
+                    boton.disabled = true;
+                    boton.classList.add("ingrediente-agotado");
+                }
+
+                if (
+                    (selecciones[categoria] || []).length >= limite &&
+                    !seleccionado
+                ) {
+                    boton.disabled = true;
+                }
+
+                boton.addEventListener("click", () => {
+                    if (ingrediente.agotado) return;
+
+                    if (!selecciones[categoria]) {
+                        selecciones[categoria] = [];
+                    }
+
+                    const seleccionados = selecciones[categoria];
+
+                    if (seleccionados.includes(ingrediente.nombre)) {
+                        selecciones[categoria] =
+                            seleccionados.filter(
+                                nombre => nombre !== ingrediente.nombre
+                            );
+                    } else if (seleccionados.length < limite) {
+                        seleccionados.push(ingrediente.nombre);
+                    }
+
+                    mostrarOpciones();
+                });
+
+                opciones.appendChild(boton);
+            });
         }
-    );
+
+        grupo.appendChild(opciones);
+        destino.appendChild(grupo);
+    }
+
+    // PERSONALIZACIÓN DE LOS COMBOS.
+    if (esCombo) {
+        const pestanas = document.createElement("div");
+        pestanas.className = "pestanas-combo";
+
+        const botonWaffle = document.createElement("button");
+        botonWaffle.type = "button";
+        botonWaffle.className = "pestana-combo";
+        botonWaffle.textContent = "🧇 Waffle";
+
+        const botonBatido = document.createElement("button");
+        botonBatido.type = "button";
+        botonBatido.className = "pestana-combo";
+        botonBatido.textContent = "🥤 Batido";
+
+        botonWaffle.classList.toggle(
+            "activa",
+            pestanaComboActiva === "waffle"
+        );
+
+        botonBatido.classList.toggle(
+            "activa",
+            pestanaComboActiva === "batido"
+        );
+
+        botonWaffle.addEventListener("click", () => {
+            pestanaComboActiva = "waffle";
+            mostrarOpciones();
+        });
+
+        botonBatido.addEventListener("click", () => {
+            pestanaComboActiva = "batido";
+            mostrarOpciones();
+        });
+
+        pestanas.appendChild(botonWaffle);
+        pestanas.appendChild(botonBatido);
+
+        contenedorOpciones.appendChild(pestanas);
+
+        const seccion = document.createElement("section");
+        seccion.className = "seccion-combo";
+
+        const tituloSeccion = document.createElement("h3");
+        tituloSeccion.className = "titulo-seccion-combo";
+
+        const categoriasActivas =
+            pestanaComboActiva === "waffle"
+                ? categoriasWaffle
+                : categoriasBatido;
+
+        if (pestanaComboActiva === "waffle") {
+            tituloSeccion.textContent = "🧇 Personaliza tu Waffle";
+            tituloSeccion.classList.add("titulo-waffle");
+        } else {
+            tituloSeccion.textContent = "🥤 Personaliza tu Batido";
+            tituloSeccion.classList.add("titulo-batido");
+        }
+
+        seccion.appendChild(tituloSeccion);
+
+        categoriasActivas.forEach(([categoria, limite]) => {
+            crearGrupo(categoria, limite, seccion);
+        });
+
+        contenedorOpciones.appendChild(seccion);
+
+    } else {
+        // Productos individuales: mostrar todas sus opciones.
+        categorias.forEach(([categoria, limite]) => {
+            crearGrupo(categoria, limite, contenedorOpciones);
+        });
+    }
 }
 
 
@@ -812,7 +946,6 @@ contenedor.addEventListener("click", event => {
     if (!producto || producto.agotado) return;
 
     if (producto.sinPersonalizacion) {
-
         const nuevoProducto = {
             id: producto.id,
             nombre: producto.nombre,
@@ -842,6 +975,7 @@ function calcularTotal() {
         0
     );
 }
+
 
 /* ==================================
 14. MOSTRAR RESUMEN DEL PEDIDO
@@ -920,17 +1054,18 @@ function actualizarResumen() {
         const acciones = document.createElement("div");
         acciones.className = "acciones-carrito";
 
-        if (producto.permiteMasSabor !== false) {
+        // Permitir editar cualquier producto personalizable.
+        const productoOriginal = productos.find(
+            p => p.id === producto.id
+        );
+
+        if (productoOriginal && !productoOriginal.sinPersonalizacion) {
             const editar = document.createElement("button");
             editar.type = "button";
             editar.textContent = "Editar";
 
             editar.addEventListener("click", () => {
-                const original = productos.find(
-                    p => p.id === producto.id
-                );
-
-                abrirPersonalizador(original, indice);
+                abrirPersonalizador(productoOriginal, indice);
             });
 
             acciones.appendChild(editar);

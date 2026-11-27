@@ -57,7 +57,7 @@ const productos = [
     },
     {
         id: 5,
-        nombre: "Coca-Cola Zero 250 ml",
+        nombre: "Coca-Cola Zero 300 ml",
         descripcion: "Todo el sabor, sin azúcar.",
         precio: 5,
         imagen: "coca-cola-zero-300ml.png",

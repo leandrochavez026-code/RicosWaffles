@@ -39,7 +39,7 @@ const productos = [
         descripcion: "Oblea con dulce de leche",
         precio: 10,
         imagen: "oblea.jpeg",
-        agotado: false,
+        agotado: true,
         sinPersonalizacion: true,
         permiteMasSabor: false,
         categorias: {}
